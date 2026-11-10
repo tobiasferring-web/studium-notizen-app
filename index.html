@@ -108,5 +108,33 @@ $('readerTool').onchange=()=>readerRefreshAll();
 const readerOriginalOverlayPaint=readerOverlayPaint;
 readerOverlayPaint=function(pg,host){readerOriginalOverlayPaint(pg,host);const layer=host.querySelector('.reader-ink');if(layer)layer.style.pointerEvents=$('readerTool').value==='scroll'?'none':'auto'};
 
+
+function syncExclusiveTools(selected){
+  const names=['hlTool','pinTool','draw','erase','deleteHighlight'];
+  if(!names.includes(selected))return;
+  if(selected!=='hlTool'){hlOn=false;hlStart=null;hlDraft=null}
+  if(selected!=='pinTool')pinActive=false;
+  if(selected!=='deleteHighlight')hlDeleteMode=false;
+  if(selected!=='draw'&&selected!=='erase'){mode='none';active=null}
+  if(selected==='draw'||selected==='erase'){hlOn=false;pinActive=false;hlDeleteMode=false}
+  $('hlTool').textContent=hlOn?'🟨 Markieren: AN':'🟨 Text markieren';
+  $('pinTool').textContent=pinActive?'📍 Nummer setzen: AN':'📍 Nummer setzen';
+  $('deleteHighlight').textContent=hlDeleteMode?'🗑️ Löschen: AN':'🗑️ Markierung löschen';
+  $('draw').textContent='✏️ Zeichnen: '+(mode==='draw'?'An':'Aus');
+  $('erase').textContent='Radierer: '+(mode==='erase'?'An':'Aus');
+  hlPaint();
+  setPointerMode();
+}
+for(const id of ['hlTool','pinTool','draw','erase','deleteHighlight']){
+  $(id).addEventListener('click',()=>syncExclusiveTools(id));
+}
+const previousViewModeChange=$('viewMode').onchange;
+$('viewMode').onchange=async e=>{
+  hlOn=false;pinActive=false;hlDeleteMode=false;mode='none';active=null;hlStart=null;hlDraft=null;
+  syncExclusiveTools('hlTool');
+  $('readerTool').value='scroll';
+  await previousViewModeChange(e);
+};
+
 $('viewMode').value=localStorage.getItem('studium-reader-preference')||'reader';
 </script></body></html>
